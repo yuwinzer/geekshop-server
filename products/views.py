@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from products.models import Product, ProductCategory
 import os
 import json
 from datetime import datetime
@@ -13,7 +14,12 @@ def index(request):
 
 
 def products(request):
-    file_path = os.path.join(MODULE_DIR, 'fixtures/goods.json')
+    # file_path_prod = os.path.join(MODULE_DIR, 'fixtures/goods.json') # подгрузка данных из fixtures
+    # file_path_cat = os.path.join(MODULE_DIR, 'fixtures/categories.json') # подгрузка данных из fixtures
     context = {'title': 'Geekshop - catalog',
-               'products': json.load(open(file_path, encoding='utf-8'))}
+               'products': Product.objects.all(),
+               'categories': ProductCategory.objects.all()
+               # 'products': json.load(open(file_path_prod, encoding='utf-8')),  # подгрузка данных из fixtures
+               # 'categories': json.load(open(file_path_cat, encoding='utf-8'))  # подгрузка данных из fixtures
+               }
     return render(request, 'products/products.html', context)
