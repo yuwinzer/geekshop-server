@@ -1,5 +1,6 @@
 from django.shortcuts import render, HttpResponseRedirect
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import user_passes_test
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
@@ -13,9 +14,15 @@ def index(request):
     context = {'title': 'GeekShop - Админ панель'}
     return render(request, 'admins/index.html', context)
 
+
 class UserListView(ListView):
     model = User
     template_name = 'admins/admin-users-read.html'
+
+    @method_decorator(user_passes_test(lambda u: u.is_staff))
+    def dispatch(self, request, *args, **kwargs):
+        return super(UserListView, self).dispatch(request, *args, **kwargs)
+
 
 class UserCreateView(CreateView):
     model = User
@@ -23,22 +30,29 @@ class UserCreateView(CreateView):
     success_url = reverse_lazy('admins:admin_users')
     template_name = 'admins/admin-users-create.html'
 
+
 class UserUpdateView(UpdateView):
     model = User
     form_class = UserAdminProfileForm
     success_url = reverse_lazy('admins:admin_users')
     template_name = 'admins/admin-users-update-delete.html'
 
+    def get_context_data(self, **kwargs):
+        context = super(UserUpdateView, self).get_context_data(**kwargs)
+        context['title'] = 'GeekShop - Обновление пользователя'
+        return context
+
+
 class UserDeleteView(DeleteView):
     model = User
     success_url = reverse_lazy('admins:admin_users')
     template_name = 'admins/admin-users-update-delete.html'
 
-
-
-
-
-
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        self.object.safe_delete()
+        return HttpResponseRedirect(success_url)
 
 # @user_passes_test(lambda u: u.is_staff)
 # def admin_users(request):
